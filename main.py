@@ -1,7 +1,5 @@
-import pandas as pd
-from Classes import *
 from Functions import *
-
+from time import process_time
 # READING AND UNDERSTANDING DATA
 df = pd.read_csv('connection_graph.csv', low_memory=False, header=0)
 df = df.drop(['Unnamed: 0.1', 'Unnamed: 0'], axis=1)
@@ -28,4 +26,23 @@ for i, row in df.iterrows():
     edge = Edge(row['departure_time'], row['arrival_time'], row['line'])
     graph.add_edge(row['start_stop'], row['end_stop'], edge)
 
-aStar_time(graph,start="PILCZYCE",goal="KRZYKI",time='23:00:00')
+start = 'PILCZYCE'
+goal='PL. GRUNWALDZKI'
+time='11:00:00'
+
+st_astar = process_time()
+aStar_path = aStar_time(graph,start=start,goal=goal,time=time)
+end_astar = process_time()
+
+
+st_dijkstra = process_time()
+dijkstra_path = dijkstra_time(graph,start=start,goal=goal,time=time)
+end_dijkstra = process_time()
+
+eval_time_dijkstra=end_dijkstra-st_dijkstra
+eval_time_astar = end_astar-st_astar
+
+print("DIJKSTRA time of eval: {:0.3f}s".format(eval_time_dijkstra))
+print("ASTAR time of eval: {:0.3f}s".format(eval_time_astar))
+print("Difference D-A = {:0.3f}s".format(eval_time_dijkstra-eval_time_astar))
+print("The same path: {}".format(aStar_path == dijkstra_path))
