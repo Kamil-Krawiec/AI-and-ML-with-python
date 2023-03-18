@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime,date
 import heapq
 
 class Vertex:
@@ -20,7 +20,7 @@ class Edge:
         return "wyjazd godzina {:^20} ->> przyjazd godzina {:^20} linia {:^14}".format(self.start_time,self.end_time,self.line)
 
     def getConnectionDuration(self ):
-        return (datetime.strptime(self.end_time, '%H:%M:%S') - datetime.strptime(self.start_time, '%H:%M:%S')).total_seconds()
+        return (self.end_time-self.start_time).total_seconds()
 
 
 class Graph:
@@ -28,6 +28,13 @@ class Graph:
     def __init__(self, graph, vertexes):
         self.graph = graph
         self.vertexes = vertexes
+
+    def getDeparturesAfterTime(self,time,stop):
+        best_match = []
+        for stop,edge in self.graph[stop]:
+            if edge.start_time>=time:
+                best_match.append((stop,edge))
+        return best_match
 
     def addVertex(self, vertex):
         if vertex not in self.graph:
