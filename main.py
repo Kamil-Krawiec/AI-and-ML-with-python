@@ -28,9 +28,9 @@ for i, row in df.iterrows():
     edge = Edge(row['departure_time'], row['arrival_time'], row['line'])
     graph.add_edge(row['start_stop'], row['end_stop'], edge)
 
-start = 'PL. GRUNWALDZKI'
-goal='DWORZEC GŁÓWNY'
-time='17:00:00'
+start = 'Stalowa'
+goal='Psie Pole'
+time='11:00:00'
 
 print("{} {} {}".format(30*"#","ASTAR TIME",30*"#"))
 st_astar = process_time()

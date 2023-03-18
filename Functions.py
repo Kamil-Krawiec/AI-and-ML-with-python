@@ -136,6 +136,6 @@ def aStar_transfers(graph, start, goal, time):
 
                 came_from[next_stop] = [current, edge]
 
-        prev_stop = current
+
 
     return decode_path(came_from, start=start, goal=goal)
