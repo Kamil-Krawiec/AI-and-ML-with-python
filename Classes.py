@@ -34,7 +34,14 @@ class Graph:
         for stop,edge in self.graph[stop]:
             if edge.start_time>=time:
                 best_match.append((stop,edge))
-        return best_match
+        return sorted(best_match, key=lambda x: x[1].start_time)
+
+    # This function returns bus lines by which we can reach our destination
+    def getVertexLines(self,stop,time):
+        lines = set()
+        for stop,edge in self.getDeparturesAfterTime(stop=stop,time=time):
+            lines.add(edge.line)
+        return lines
 
     def addVertex(self, vertex):
         if vertex not in self.graph:
@@ -75,4 +82,4 @@ class PriorityQueue:
         heapq.heappush(self.elements, (priority, item))
 
     def get(self):
-        return heapq.heappop(self.elements)
+        return heapq.heappop(self.elements)[1]
