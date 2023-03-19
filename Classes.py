@@ -14,13 +14,10 @@ class Edge:
         self.end_time = end_time
         self.start_time = start_time
         self.line = line
-        self.duration = self.getConnectionDuration()
 
     def __str__(self):
         return "wyjazd godzina {:^20} ->> przyjazd godzina {:^20} linia {:^14}".format(self.start_time,self.end_time,self.line)
 
-    def getConnectionDuration(self ):
-        return (self.end_time-self.start_time).total_seconds()
 
 
 class Graph:
@@ -56,9 +53,6 @@ class Graph:
         for vertex in self.graph:
             for edges in self.graph[vertex]:
                 print(vertex, " -> ", edges[0], " edge weight: ", edges[1])
-
-    def waitingCost(self,time,edge):
-        return (datetime.strptime(edge.end_time, '%H:%M:%S')-datetime.strptime(time, '%H:%M:%S')).total_seconds()
 
     def add_edge(self, v1, v2, e):
         if v1 not in self.graph:

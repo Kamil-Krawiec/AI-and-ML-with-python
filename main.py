@@ -28,23 +28,40 @@ for i, row in df.iterrows():
     edge = Edge(row['departure_time'], row['arrival_time'], row['line'])
     graph.add_edge(row['start_stop'], row['end_stop'], edge)
 
-start = 'Stalowa'
-goal='Psie Pole'
+start = 'PL. GRUNWALDZKI'
+goal='BISKUPIN'
 time='11:00:00'
 
 print("{} {} {}".format(30*"#","ASTAR TIME",30*"#"))
 st_astar = process_time()
-aStar_path = aStar_time(graph,start=start,goal=goal,time=time)
+a,b,c= aStar_time(graph,start=start,goal=goal,time=time)
+print(str(b)+", "+str(c))
 end_astar = process_time()
 
 print("{} {} {}".format(30*"#","DIJKSTRA TIME",30*"#"))
 st_dijkstra = process_time()
-dijkstra_path = dijkstra_time(graph,start=start,goal=goal,time=time)
+d,e,f = dijkstra_time(graph,start=start,goal=goal,time=time)
+print(str(e)+", "+str(f))
 end_dijkstra = process_time()
 
 print("{} {} {}".format(30*"#","ASTAR TRANSFER",30*"#"))
 st_astar_transfer = process_time()
-aStar_path_transfer = aStar_transfers(graph,start=start,goal=goal,time=time)
+# best=1
+# x,y = 0,0
+# NEW = -1
+# for i in range(10,100000,100):
+#     g, h, j = aStar_path_transfer = aStar_transfers(graph, start=start, goal=goal, time=time, n=i)
+#
+#     if h/j.seconds<best:
+#         best=h/j.seconds
+#         NEW=i
+#         x,y = j,h
+#
+# print(NEW)
+# print(str(x)+", "+str(y))
+# print(str(h)+", "+str(i))
+g, h, j = aStar_path_transfer = aStar_transfers(graph, start=start, goal=goal, time=time, n=8110)
+print(g)
 end_astar_transfer = process_time()
 
 eval_time_dijkstra = end_dijkstra-st_dijkstra
@@ -55,5 +72,5 @@ print("DIJKSTRA_TIME time of eval: {:0.3f}s".format(eval_time_dijkstra))
 print("ASTAR_TIME time of eval: {:0.3f}s".format(eval_time_astar))
 print("Difference D_TIME-A_TIME = {:0.3f}s".format(eval_time_dijkstra-eval_time_astar))
 print("ASTAR_TRANSFER = {:0.3f}s".format(end_astar_transfer-st_astar_transfer))
-print("The same path: {}".format(aStar_path == dijkstra_path == aStar_path_transfer))
+# print("The same path: {}".format(aStar_path == dijkstra_path == aStar_path_transfer))
 
