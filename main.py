@@ -1,5 +1,7 @@
-from Functions import *
 from time import process_time
+
+from Functions import *
+
 # READING AND UNDERSTANDING DATA
 df = pd.read_csv('connection_graph.csv', low_memory=False, header=0)
 df = df.drop(['Unnamed: 0.1', 'Unnamed: 0'], axis=1)
@@ -28,49 +30,53 @@ for i, row in df.iterrows():
     edge = Edge(row['departure_time'], row['arrival_time'], row['line'])
     graph.add_edge(row['start_stop'], row['end_stop'], edge)
 
-start = 'PL. GRUNWALDZKI'
-goal='BISKUPIN'
-time='11:00:00'
+# --------------------------------------------------------- TESTING
+start = 'KOWALE'
+goal = 'Grabiszyńska'
+time = '11:00:00'
 
-print("{} {} {}".format(30*"#","ASTAR TIME",30*"#"))
-st_astar = process_time()
-a,b,c= aStar_time(graph,start=start,goal=goal,time=time)
-print(str(b)+", "+str(c))
-end_astar = process_time()
+# TRANSFER ASTAR
+ATR = []
+path_list_first_ATR = aStar_transfers(graph, start=start, goal=goal, time=time, n=8110)[0]
 
-print("{} {} {}".format(30*"#","DIJKSTRA TIME",30*"#"))
-st_dijkstra = process_time()
-d,e,f = dijkstra_time(graph,start=start,goal=goal,time=time)
-print(str(e)+", "+str(f))
-end_dijkstra = process_time()
+for i in range(100):
+    start_astar_transfer = process_time()
+    path_list_ATR, path_df_ATR, transfers_ATR, duration_ATR, D_ATR, N_ATR = aStar_transfers(graph, start=start,
+                                                                                            goal=goal, time=time,
+                                                                                            n=8110)
+    end_astar_transfer = process_time()
+    ATR.append([int(path_list_ATR == path_list_first_ATR), transfers_ATR, duration_ATR,
+                end_astar_transfer - start_astar_transfer, pow(N_ATR,float(1/D_ATR))])
+df_ATR = pd.DataFrame(ATR, columns=['the_same_path', 'transfers', 'duration', 'time_of_eval','branching_factor'])
 
-print("{} {} {}".format(30*"#","ASTAR TRANSFER",30*"#"))
-st_astar_transfer = process_time()
-# best=1
-# x,y = 0,0
-# NEW = -1
-# for i in range(10,100000,100):
-#     g, h, j = aStar_path_transfer = aStar_transfers(graph, start=start, goal=goal, time=time, n=i)
-#
-#     if h/j.seconds<best:
-#         best=h/j.seconds
-#         NEW=i
-#         x,y = j,h
-#
-# print(NEW)
-# print(str(x)+", "+str(y))
-# print(str(h)+", "+str(i))
-g, h, j = aStar_path_transfer = aStar_transfers(graph, start=start, goal=goal, time=time, n=8110)
-print(g)
-end_astar_transfer = process_time()
+print("{} {} {}".format(30 * '#', "Transfer A", 30 * '#'))
+print(df_ATR.describe())
 
-eval_time_dijkstra = end_dijkstra-st_dijkstra
-eval_time_astar = end_astar-st_astar
+# TIME ASTAR
+ATI = []
+path_list_first_ATI = aStar_time(graph, start=start, goal=goal, time=time)[0]
 
-print("{} {} {}".format(30*"#","RESULTS",30*"#"))
-print("DIJKSTRA_TIME time of eval: {:0.3f}s".format(eval_time_dijkstra))
-print("ASTAR_TIME time of eval: {:0.3f}s".format(eval_time_astar))
-print("Difference D_TIME-A_TIME = {:0.3f}s".format(eval_time_dijkstra-eval_time_astar))
-print("ASTAR_TRANSFER = {:0.3f}s".format(end_astar_transfer-st_astar_transfer))
-# print("The same path: {}".format(aStar_path == dijkstra_path == aStar_path_transfer))
+for i in range(100):
+    start_astar_time = process_time()
+    path_list_ATI, path_df_ATI, transfers_ATI, duration_ATI, D_ATI, N_ATI = aStar_time(graph, start=start, goal=goal,
+                                                                                       time=time)
+    end_astar_time = process_time()
+    ATI.append(
+        [int(path_list_ATI == path_list_first_ATI), transfers_ATI, duration_ATI, end_astar_time - start_astar_time,pow(N_ATI,float(1/D_ATI))])
+df_ATI = pd.DataFrame(ATI, columns=['the_same_path', 'transfers', 'duration', 'time_of_eval','branching_factor'])
+print("{} {} {}".format(30 * '#', "Time A", 30 * '#'))
+print(df_ATI.describe())
 
+# TIME DIJKSTRA
+DI = []
+path_list_first_DI = dijkstra_time(graph, start=start, goal=goal, time=time)[0]
+
+for i in range(100):
+    start_dijkstra_time = process_time()
+    path_list_D, path_df_D, transfers_D, duration_D, D_D, N_D = aStar_time(graph, start=start, goal=goal, time=time)
+    end_dijkstra_time = process_time()
+    DI.append(
+        [int(path_list_D == path_list_first_DI), transfers_D, duration_D, end_dijkstra_time - start_dijkstra_time,pow(N_D,float(1/D_D))])
+df_DI = pd.DataFrame(DI, columns=['the_same_path', 'transfers', 'duration', 'time_of_eval','branching_factor'])
+print("{} {} {}".format(30 * '#', "Time D", 30 * '#'))
+print(df_DI.describe().to_string())
