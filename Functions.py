@@ -61,7 +61,7 @@ def dijkstra_time(graph, start, goal, time):
 
                 came_from[next_stop] = [current, edge]
 
-                NODES += 1
+            NODES += 1
     return None
 
 
@@ -70,7 +70,7 @@ def dijkstra_time(graph, start, goal, time):
 # ----------------------------------------- TIME
 def time_heuristic(goal, next_stop):
     return (abs(goal.start_stop_lat - next_stop.start_stop_lat) + abs(
-        goal.start_stop_lon - next_stop.start_stop_lon)) * 10
+        goal.start_stop_lon - next_stop.start_stop_lon)) * 10000
 
 
 def aStar_time(graph, start, goal, time):
@@ -102,9 +102,8 @@ def aStar_time(graph, start, goal, time):
                 cost_so_far[next_stop] = new_cost
                 priority = new_cost + time_heuristic(graph.vertexes[goal], graph.vertexes[next_stop])
                 frontier.put(next_stop, priority)
-
                 came_from[next_stop] = [current, edge]
-                NODES+=1
+            NODES+=1
     return None
 
 
@@ -143,7 +142,7 @@ def aStar_transfers(graph, start, goal, time, n):
             new_time_delta = time_delta[current] + (edge.end_time - current_time).total_seconds()
 
             new_cost = cost_so_far[current] + (
-                0 if came_from[current] is None or came_from[current][1].line == edge.line else 1) + new_time_delta / n
+                0 if came_from[current] is None or came_from[current][1].line == edge.line else 2) + new_time_delta / n
 
             if next_stop not in cost_so_far or new_cost < cost_so_far[next_stop]:
                 time_delta[next_stop] = new_time_delta
@@ -152,8 +151,29 @@ def aStar_transfers(graph, start, goal, time, n):
 
                 priority = new_cost + transfer_heuristic(lines, edge.line)
 
+
                 frontier.put(next_stop, priority)
 
                 came_from[next_stop] = [current, edge]
-                NODES+=1
+            NODES+=1
     return None
+
+
+
+def calculate_b_star(N, d):
+    b_star = 2.0
+    eps = 0.00001
+
+    for i in range(1000):
+        sum_b = 0.0
+        for j in range(d+1):
+            sum_b += b_star**j
+
+        if abs(N - sum_b) < eps:
+            return b_star
+        elif sum_b > N:
+            b_star -= 0.01
+        else:
+            b_star += 0.01
+
+    return b_star
