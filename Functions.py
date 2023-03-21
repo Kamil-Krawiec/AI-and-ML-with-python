@@ -18,7 +18,7 @@ def decode_path(came_from, goal, start, DEPTH, NODES):
         path.append([info[0], edge.start_time.time(), edge.end_time.time(), edge.line])
         current = info[0]
 
-    time_diff = datetime.combine(date.today(), path[1][1]) - datetime.combine(date.today(), path[len(path) - 1][1])
+    time_diff = datetime.combine(date.today(), path[1][2]) - datetime.combine(date.today(), path[len(path) - 1][1])
 
     path.reverse()
 
