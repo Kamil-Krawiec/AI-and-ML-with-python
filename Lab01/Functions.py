@@ -307,13 +307,10 @@ class Taboo:
 
             tabu_list.append(next_solution)
 
-            # if len(tabu_list) > tabu_list_size:
-            #     tabu_list.pop(0)
-
             if objective_function(next_solution) < objective_function(best_solution):
                 best_solution = next_solution.copy()
 
             current_solution = next_solution.copy()
+
             iteration += 1
-        print(iteration)
         return self.decode_solution(best_solution)
