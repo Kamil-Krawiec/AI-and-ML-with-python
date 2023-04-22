@@ -1,74 +1,8 @@
 from collections import OrderedDict
 
-'''
-OrderedDict is a dictionary subclass in Python that remembers the order in which items were added. 
-In a regular Python dictionary, the order of the items is not guaranteed, and it may change between 
-different runs of the program or different versions of Python.
-'''
-# Game logic built with a huge inspiration from: https://github.com/sadeqsheikhi/reversi_python_ai
-
-class GameHasEndedError(Exception):
-    pass
-
-
-class InvalidMoveError(Exception):
-    pass
-
-
-class InvalidCoordRangeStepError(Exception):
-    pass
-
-
-class Coord:
-    # on definition we pass x and y values to class
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-    # gets two coordination and returns the sum of them as new Coord
-    def __add__(self, other):
-        return Coord(self.x + other.x, self.y + other.y)
-
-    # compares two Coords
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
-
-    def __ne__(self, other):
-        return self.x != other.x or self.y != other.y
-
-    def __hash__(self):
-        return hash((self.x, self.y))
-
-    # string representation of object
-    def __str__(self):
-        return "({}, {})".format(self.x, self.y)
-
-    # defines if Coord is in right domain
-    def is_in_board(self):
-        return min(self.x, self.y) >= 0 and max(self.x, self.y) < 8
-
-    # maybe related to flipping
-    def to(self, end, step):
-        if (end.x - self.x) * step.y != (end.y - self.y) * step.x:
-            raise InvalidCoordRangeStepError()
-
-        result = []
-        coord = self
-        while coord != end:
-            result.append(coord)
-            coord += step
-        return result
-
-
-class Player:
-
-    def __init__(self, field, AI=False):
-        # type of stones [b, w]
-        self.field = field
-
-        # score of each player
-        self.result = 0
-        self.AI = AI
+from Lab02.Coord import Coord
+from Lab02.Errors import GameHasEndedError, InvalidMoveError
+from Lab02.Player import Player
 
 
 class Reversi:
@@ -171,12 +105,13 @@ class Reversi:
         for coord in won_fields:
             self.board[coord] = self.player.field
 
-        # update player result after aech move
+        # update player result after each move
         self.black_player.result = len(self.current_player_discs(1))
         self.white_player.result = len(self.current_player_discs(2))
 
         self.change_current_player()
         self.game_state = self.outcome()
+
 
     # run after every move
     def outcome(self):
@@ -196,16 +131,17 @@ class Reversi:
         return self.GAME_STATES["IN_PROGRESS"]
 
     def __str__(self):
-        bufor=''
-        row = 7
+        bufor = ''
+        row = 0
         for i, (key, value) in enumerate(self.board.items()):
 
             if i % 8 == 0:
                 bufor += '\n'
-                bufor += str(row) + ' '
-                row -= 1
+                bufor += str(row) + ' - '
+                row += 1
 
-            bufor += value + ' '
+            bufor += value + ' | '
 
-        bufor += '\n  ' + ' '.join([str(i) for i in range(8)])
+        bufor += '\n' + '-' * 35
+        bufor += '\n    ' + ''.join([str(i) + ' | ' for i in range(8)])
         return bufor
