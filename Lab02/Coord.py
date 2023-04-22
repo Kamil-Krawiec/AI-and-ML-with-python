@@ -1,3 +1,5 @@
+from Lab02.Errors import InvalidCoordRangeStepError
+
 
 class Coord:
     # on definition, we pass x and y values to class
