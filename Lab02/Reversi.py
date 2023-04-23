@@ -1,11 +1,14 @@
+import string
 from collections import OrderedDict
+
+from Lab02 import Player
 from Lab02.Coord import Coord
 from Lab02.Errors import GameHasEndedError, InvalidMoveError
 
 
+# Player1 - BLACK always go first.
+# Player2 - WHITE always go second.
 class Reversi:
-    BLACK = '1'
-    WHITE = '2'
     EMPTY = '0'
 
     # surrounding of a stone
@@ -14,12 +17,15 @@ class Reversi:
 
     GAME_STATES = {
         "IN_PROGRESS": 'In progress',
-        "BLACK_WINS": BLACK,
-        "WHITE_WINS": WHITE,
+        "WHITE_WINS": '',
+        "BLACK_WINS": '',
         "TIE": 'Tie'
     }
 
-    def __init__(self):
+    def __init__(self, black: Player, white: Player, start_from_round):
+
+        self.BLACK = black.field
+        self.WHITE = white.field
 
         # creating the board as 64 tiles
         self.board = OrderedDict((Coord(i, j), self.EMPTY) for i in range(8) for j in range(8))
@@ -37,10 +43,14 @@ class Reversi:
         self.game_state = self.GAME_STATES['IN_PROGRESS']
 
         # counter
-        self.round = 4
+        self.round = start_from_round
 
         # helper
         self.available_moves_now = set(self.current_player_available_moves())
+
+        # black and white values set in GAME_STATE
+        self.GAME_STATES['WHITE_WINS'] = self.WHITE
+        self.GAME_STATES['BLACK_WINS'] = self.BLACK
 
     # determines if the disk in the given coordination is current players or not
     def is_enemy_disc(self, coord):
@@ -60,17 +70,26 @@ class Reversi:
         return [coord for coord in all_coords
                 if self.board[coord] == self.player]
 
-    def custom_player_discs(self, player):
+    def custom_player_discs(self,player):
+        all_coords = [Coord(i, j) for i in range(8) for j in range(8)]
+        return [coord for coord in all_coords
+                if self.board[coord] == player]
+
+
+    def custom_player_discs_len(self, player):
         all_coords = [Coord(i, j) for i in range(8) for j in range(8)]
         return len([coord for coord in all_coords
                     if self.board[coord] == player])
 
     # changes the turn
     def change_current_player(self):
+
         if self.player == self.BLACK:
             self.player = self.WHITE
         else:
             self.player = self.BLACK
+
+        self.available_moves_now = set(self.current_player_available_moves())
 
     # array of clickable coordination
     def current_player_available_moves(self):
@@ -86,6 +105,20 @@ class Reversi:
                         result += [coord]
         return result
 
+    def custom_player_available_moves(self,player):
+        discs = self.custom_player_discs(player)
+        result = []
+        for disc in discs:
+
+            for d in self.DIRECTIONS:
+                coord = disc + d
+                while self.is_enemy_disc(coord):
+                    coord += d
+                    if self.is_empty_disc(coord):
+                        result += [coord]
+        return result
+
+
     # if coordination is in available filed
     def is_valid_move(self, coord):
         return coord in self.current_player_available_moves()
@@ -93,10 +126,10 @@ class Reversi:
     def play(self, coord):
         if self.game_state != self.GAME_STATES['IN_PROGRESS']:
             raise GameHasEndedError('Game has already ended')
+        if coord is None:
+            self.game_state = self.outcome()
+            return
         if not self.is_valid_move(coord):
-            print(f'invalid move:{str(coord)} for player {self.player}' )
-            print('board '+str([str(c) for c in self.current_player_available_moves()]))
-            print(self.__str__())
             raise InvalidMoveError("Not valid move")
 
         # fields that are flipped after a move
@@ -114,16 +147,15 @@ class Reversi:
             self.board[coord] = self.player
 
         self.change_current_player()
-        self.round += 1
 
-        self.available_moves_now = set(self.current_player_available_moves())
+        self.round += 1
 
         if self.round > 62:
             self.game_state = self.outcome()
 
         return self
 
-    # run after every move
+    # Function defining which player won
     def outcome(self):
         # change player if there is no move for first player
         if not self.current_player_available_moves():
@@ -131,14 +163,17 @@ class Reversi:
 
             # if second player had no move determine the winner
             if not self.current_player_available_moves():
-                if self.custom_player_discs(self.WHITE) > self.custom_player_discs(self.BLACK):
+                if self.custom_player_discs_len(self.WHITE) > self.custom_player_discs_len(self.BLACK):
                     return self.GAME_STATES["WHITE_WINS"]
-                elif self.custom_player_discs(self.WHITE) < self.custom_player_discs(self.BLACK):
+                elif self.custom_player_discs_len(self.WHITE) < self.custom_player_discs_len(self.BLACK):
                     return self.GAME_STATES["BLACK_WINS"]
                 else:
                     return self.GAME_STATES["TIE"]
 
         return self.GAME_STATES["IN_PROGRESS"]
+
+    def get_oponent_field(self,player: string):
+        return self.BLACK if player == self.WHITE else self.WHITE
 
     def __str__(self):
         bufor = ''

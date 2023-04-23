@@ -1,62 +1,146 @@
-from operator import itemgetter
 from copy import deepcopy
-from Lab02 import Reversi
-from Lab02.Heuristics import heuristics1
+from Lab02.Reversi import *
 
 
-def minimax(board: Reversi, curDepth, prev_move, maxTurn, targetDepth, me, enemy):
-    # base case : targetDepth reached
-    if curDepth == targetDepth:
-        return heuristics1(board, me),prev_move
+class Minimaxi():
+    def __init__(self, heur_func_mm):
+        self.heuristic = heur_func_mm
 
-    if maxTurn:
-        compr_list = []
+    def minimax(self, board, curDepth, prev_move, maxTurn, targetDepth, player):
 
-        for move in board.available_moves_now:
-            newBoard = deepcopy(board)
-            newBoard.play(move)
-            compr_list.append(
-                minimax(
+        if curDepth == targetDepth or board.game_state != 'In progress' \
+                or (len(board.available_moves_now) == 0 and prev_move is not None):
+
+            if board.game_state == player:
+                return float('inf'), prev_move
+
+            elif board.game_state == 'Tie':
+                return 0, prev_move
+
+            elif board.game_state != 'In progress':
+                return -float('inf'), prev_move
+
+            return self.heuristic(board, player), prev_move
+
+        if maxTurn:
+
+            max_score = -float('inf')
+            best_move = None
+
+            for move in board.available_moves_now:
+                newBoard = deepcopy(board)
+
+                newBoard.play(move)
+
+                score, cand_move = self.minimax(
                     newBoard,
                     curDepth + 1,
                     move if prev_move is None else prev_move,
                     False,
                     targetDepth,
-                    me,
-                    enemy)
-            )
+                    player
+                )
 
-        if board.round> 64-targetDepth:
-            if board.game_state == enemy:
-                return -float('inf'),prev_move
-            elif board.game_state == me:
-                return float('inf'),prev_move
+                if score >= max_score:
+                    max_score = score
+                    best_move = cand_move
 
-        if len(compr_list)==0:
-            return float('inf'),prev_move
+            return max_score, best_move
+        else:
 
-        return max(compr_list, key=itemgetter(0))
-    else:
-        compr_list = []
+            min_score = float('inf')
+            best_move = None
 
-        for move in board.available_moves_now:
-            newBoard = deepcopy(board)
-            newBoard.play(move)
-            compr_list.append(
-                minimax(
+            for move in board.available_moves_now:
+                newBoard = deepcopy(board)
+                newBoard.play(move)
+
+                score, cand_move = self.minimax(
                     newBoard,
                     curDepth + 1,
-                    prev_move, True, targetDepth,
-                    enemy,
-                    me))
+                    prev_move,
+                    True,
+                    targetDepth,
+                    player
+                )
 
-        if board.round> 64-targetDepth:
-            if board.game_state == enemy:
-                return -float('inf'),prev_move
-            elif board.game_state == me:
-                return +float('inf'),prev_move
+                if score <= min_score:
+                    min_score = score
+                    best_move = cand_move
 
-        if len(compr_list)==0:
-            return -float('inf'),prev_move
+            return min_score, best_move
 
-        return min(compr_list, key=itemgetter(0))
+    def minimax_alfa_beta(self, board, curDepth, prev_move, maxTurn, targetDepth, player, alpha, beta):
+        if curDepth == targetDepth or board.game_state != 'In progress' \
+                or (len(board.available_moves_now) == 0 and prev_move is not None):
+            if board.game_state == player:
+                return float('inf'), prev_move
+            elif board.game_state == 'Tie':
+                return 0, prev_move
+            elif board.game_state != 'In progress':
+                return -float('inf'), prev_move
+
+            return self.heuristic(board, player), prev_move
+
+        if maxTurn:
+
+            max_score = -float('inf')
+            best_move = None
+
+            for move in board.available_moves_now:
+                newBoard = deepcopy(board)
+
+                newBoard.play(move)
+
+                score, cand_move = self.minimax_alfa_beta(
+                    newBoard,
+                    curDepth + 1,
+                    move if prev_move is None else prev_move,
+                    False,
+                    targetDepth,
+                    player,
+                    alpha,
+                    beta
+                )
+
+                if score >= max_score:
+                    max_score = score
+                    best_move = cand_move
+
+                alpha = max(alpha, score)
+
+                if alpha >= beta:
+                    break
+
+            return max_score, best_move
+        else:
+
+            min_score = float('inf')
+            best_move = None
+
+            for move in board.available_moves_now:
+                newBoard = deepcopy(board)
+                newBoard.play(move)
+
+                score, cand_move = self.minimax_alfa_beta(
+                    newBoard,
+                    curDepth + 1,
+                    prev_move,
+                    True,
+                    targetDepth,
+                    player,
+                    alpha,
+                    beta
+                )
+
+                if score is None: continue
+
+                if score <= min_score:
+                    min_score = score
+                    best_move = cand_move
+
+                beta = min(beta, score)
+                if alpha >= beta:
+                    break
+
+            return min_score, best_move
