@@ -22,7 +22,7 @@ class Reversi:
         "TIE": 'Tie'
     }
 
-    def __init__(self, black: Player, white: Player, start_from_round):
+    def __init__(self, black: Player, white: Player, start_from_round,black_starts):
 
         self.BLACK = black.field
         self.WHITE = white.field
@@ -37,16 +37,13 @@ class Reversi:
         self.board[Coord(4, 3)] = self.BLACK
 
         # player is the current player
-        self.player = self.BLACK
+        self.player = self.BLACK if black_starts else self.WHITE
 
         # creating initial scores
         self.game_state = self.GAME_STATES['IN_PROGRESS']
 
         # counter
         self.round = start_from_round
-
-        # helper
-        self.available_moves_now = set(self.current_player_available_moves())
 
         # black and white values set in GAME_STATE
         self.GAME_STATES['WHITE_WINS'] = self.WHITE
@@ -89,8 +86,6 @@ class Reversi:
         else:
             self.player = self.BLACK
 
-        self.available_moves_now = set(self.current_player_available_moves())
-
     # array of clickable coordination
     def current_player_available_moves(self):
         discs = self.current_player_discs()
@@ -103,7 +98,7 @@ class Reversi:
                     coord += d
                     if self.is_empty_disc(coord):
                         result += [coord]
-        return result
+        return set(result)
 
     def custom_player_available_moves(self,player):
         discs = self.custom_player_discs(player)

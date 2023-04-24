@@ -7,12 +7,12 @@ from Lab02.Player import Player
 
 # BLACK always go first.
 # WHITE always go second.
-player1 = Player('1',heuristic=heuristic2,maxDepth=2)
-player2 = Player('2',heuristic=heuristic3,maxDepth=2)
+player1 = Player('1',heuristic=heuristic3,maxDepth=2)
+player2 = Player('2',heuristic=heuristic1,maxDepth=4)
+
 
 def minimaxi():
-    board = Reversi(black=player1, white=player2, start_from_round=4)
-
+    board = Reversi(black=player1, white=player2, start_from_round=4,black_starts=False)
     print(board)
 
     s = process_time()
@@ -20,10 +20,12 @@ def minimaxi():
         if board.player == '1':
             score, coord = player1.make_best_move(deepcopy(board))
             board.play(coord)
+            # print(f'Player 1 Coord {coord}')
         else:
             score, coord = player2.make_best_move(deepcopy(board))
             board.play(coord)
-
+            # print(f'Player 2 Coord {coord}')
+        print(board.round)
     e = process_time()
 
     print(board)
@@ -36,18 +38,18 @@ def minimaxi():
     print(f'{e - s}s duration')
 
 def minimaxi_alpha_beta():
-    board = Reversi(black=player1, white=player2, start_from_round=4)
+    board = Reversi(black=player1, white=player2, start_from_round=4, black_starts=False)
 
-    print(board)
     s = process_time()
     while board.game_state == 'In progress':
         if board.player == '1':
             score, coord = player1.make_best_move_alpha_beta(deepcopy(board))
             board.play(coord)
+            # print(f'Player 1 Coord {coord}')
         else:
             score, coord = player2.make_best_move_alpha_beta(deepcopy(board))
             board.play(coord)
-
+            # print(f'Player 2 Coord {coord}')
     e = process_time()
 
     print(board)
@@ -60,4 +62,5 @@ def minimaxi_alpha_beta():
     print(f'{e - s}s duration')
 
 minimaxi()
+print("-"*30)
 minimaxi_alpha_beta()

@@ -9,7 +9,7 @@ class Minimaxi():
     def minimax(self, board, curDepth, prev_move, maxTurn, targetDepth, player):
 
         if curDepth == targetDepth or board.game_state != 'In progress' \
-                or (len(board.available_moves_now) == 0 and prev_move is not None):
+                or (len(board.current_player_available_moves()) == 0 and prev_move is not None):
 
             if board.game_state == player:
                 return float('inf'), prev_move
@@ -27,31 +27,39 @@ class Minimaxi():
             max_score = -float('inf')
             best_move = None
 
-            for move in board.available_moves_now:
+            avaible_moves = board.current_player_available_moves()
+            for move in avaible_moves:
                 newBoard = deepcopy(board)
+
+                prev_move = move if prev_move is None else prev_move
 
                 newBoard.play(move)
 
                 score, cand_move = self.minimax(
                     newBoard,
                     curDepth + 1,
-                    move if prev_move is None else prev_move,
+                    prev_move,
                     False,
                     targetDepth,
                     player
                 )
 
-                if score >= max_score:
+                if score == float('inf'): return score, cand_move
+
+                if score > max_score:
                     max_score = score
                     best_move = cand_move
 
-            return max_score, best_move
+            return max_score, prev_move if best_move is None else best_move
+
         else:
 
             min_score = float('inf')
             best_move = None
+            avaible_moves = board.current_player_available_moves()
 
-            for move in board.available_moves_now:
+
+            for move in avaible_moves:
                 newBoard = deepcopy(board)
                 newBoard.play(move)
 
@@ -64,19 +72,24 @@ class Minimaxi():
                     player
                 )
 
-                if score <= min_score:
+                if score == -float('inf'): return score, cand_move
+
+                if score < min_score:
                     min_score = score
                     best_move = cand_move
 
-            return min_score, best_move
+            return min_score, prev_move if best_move is None else best_move
 
     def minimax_alfa_beta(self, board, curDepth, prev_move, maxTurn, targetDepth, player, alpha, beta):
         if curDepth == targetDepth or board.game_state != 'In progress' \
-                or (len(board.available_moves_now) == 0 and prev_move is not None):
+                or (len(board.current_player_available_moves()) == 0 and prev_move is not None):
+
             if board.game_state == player:
                 return float('inf'), prev_move
+
             elif board.game_state == 'Tie':
                 return 0, prev_move
+
             elif board.game_state != 'In progress':
                 return -float('inf'), prev_move
 
@@ -87,7 +100,12 @@ class Minimaxi():
             max_score = -float('inf')
             best_move = None
 
-            for move in board.available_moves_now:
+            avaible_moves = board.current_player_available_moves()
+
+            for move in avaible_moves:
+
+                prev_move = move if prev_move is None else prev_move
+
                 newBoard = deepcopy(board)
 
                 newBoard.play(move)
@@ -95,7 +113,7 @@ class Minimaxi():
                 score, cand_move = self.minimax_alfa_beta(
                     newBoard,
                     curDepth + 1,
-                    move if prev_move is None else prev_move,
+                    prev_move,
                     False,
                     targetDepth,
                     player,
@@ -103,7 +121,9 @@ class Minimaxi():
                     beta
                 )
 
-                if score >= max_score:
+                if score == float('inf'): return score, cand_move
+
+                if score > max_score:
                     max_score = score
                     best_move = cand_move
 
@@ -112,13 +132,16 @@ class Minimaxi():
                 if alpha >= beta:
                     break
 
-            return max_score, best_move
+            return max_score, prev_move if best_move is None else best_move
+
+
         else:
 
             min_score = float('inf')
             best_move = None
+            avaible_moves = board.current_player_available_moves()
 
-            for move in board.available_moves_now:
+            for move in avaible_moves:
                 newBoard = deepcopy(board)
                 newBoard.play(move)
 
@@ -133,14 +156,15 @@ class Minimaxi():
                     beta
                 )
 
-                if score is None: continue
+                if score == -float('inf'): return score, cand_move
 
-                if score <= min_score:
+                if score < min_score:
                     min_score = score
                     best_move = cand_move
 
                 beta = min(beta, score)
+
                 if alpha >= beta:
                     break
 
-            return min_score, best_move
+            return min_score, prev_move if best_move is None else best_move
