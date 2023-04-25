@@ -31,7 +31,7 @@ class Minimaxi():
             for move in avaible_moves:
                 newBoard = deepcopy(board)
 
-                prev_move = move if prev_move is None else prev_move
+                prev_move = move if curDepth == 0 else prev_move
 
                 newBoard.play(move)
 
@@ -57,7 +57,6 @@ class Minimaxi():
             min_score = float('inf')
             best_move = None
             avaible_moves = board.current_player_available_moves()
-
 
             for move in avaible_moves:
                 newBoard = deepcopy(board)
@@ -104,7 +103,7 @@ class Minimaxi():
 
             for move in avaible_moves:
 
-                prev_move = move if prev_move is None else prev_move
+                prev_move = move if curDepth == 0 else prev_move
 
                 newBoard = deepcopy(board)
 

@@ -1,13 +1,15 @@
 import string
 from collections import OrderedDict
-
 from Lab02 import Player
 from Lab02.Coord import Coord
 from Lab02.Errors import GameHasEndedError, InvalidMoveError
 
+'''
+OrderedDict is a dictionary subclass in Python that remembers the order in which items were added. 
+In a regular Python dictionary, the order of the items is not guaranteed, and it may change between 
+different runs of the program or different versions of Python.
+'''
 
-# Player1 - BLACK always go first.
-# Player2 - WHITE always go second.
 class Reversi:
     EMPTY = '0'
 
@@ -72,7 +74,6 @@ class Reversi:
         return [coord for coord in all_coords
                 if self.board[coord] == player]
 
-
     def custom_player_discs_len(self, player):
         all_coords = [Coord(i, j) for i in range(8) for j in range(8)]
         return len([coord for coord in all_coords
@@ -113,7 +114,6 @@ class Reversi:
                         result += [coord]
         return result
 
-
     # if coordination is in available filed
     def is_valid_move(self, coord):
         return coord in self.current_player_available_moves()
@@ -145,6 +145,9 @@ class Reversi:
 
         self.round += 1
 
+        self.white_score= self.custom_player_discs_len(self.WHITE)
+        self.black_score= self.custom_player_discs_len(self.BLACK)
+
         if self.round > 62:
             self.game_state = self.outcome()
 
@@ -158,9 +161,9 @@ class Reversi:
 
             # if second player had no move determine the winner
             if not self.current_player_available_moves():
-                if self.custom_player_discs_len(self.WHITE) > self.custom_player_discs_len(self.BLACK):
+                if self.white_score>self.black_score:
                     return self.GAME_STATES["WHITE_WINS"]
-                elif self.custom_player_discs_len(self.WHITE) < self.custom_player_discs_len(self.BLACK):
+                elif self.white_score<self.black_score:
                     return self.GAME_STATES["BLACK_WINS"]
                 else:
                     return self.GAME_STATES["TIE"]

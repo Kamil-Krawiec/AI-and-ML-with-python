@@ -1,9 +1,10 @@
+import random
+
 from Lab02 import Reversi
 
 
 def heuristic1(board: Reversi, player):
     return board.custom_player_discs_len(player)
-
 
 def heuristic2(game: Reversi, player):
     board = game.board.items()
@@ -39,22 +40,22 @@ def heuristic2(game: Reversi, player):
     for i in range(8):
         for j in range(8):
 
-            if board[i+j][1] == my_color:
+            if board[i + j][1] == my_color:
                 d += V[i][j]
                 my_tiles += 1
-            elif board[i+j][1] == opp_color:
+            elif board[i + j][1] == opp_color:
                 d -= V[i][j]
                 opp_tiles += 1
 
             # calculates the number of blank spaces around me
             # if the tile is not empty take a step in each direction
-            if board[i+j][1] != '0':
+            if board[i + j][1] != '0':
                 for k in range(8):
                     x = i + X1[k]
                     y = j + Y1[k]
                     if (0 <= x < 8 and 0 <= y < 8 and
-                            board[i+j][1] == '0'):
-                        if board[i+j][1] == my_color:
+                            board[i + j][1] == '0'):
+                        if board[i + j][1] == my_color:
                             my_front_tiles += 1
                         else:
                             opp_front_tiles += 1
@@ -177,8 +178,8 @@ def heuristic3(game: Reversi, player):
 
         c = 25 * (my_tiles - opp_tiles)
 
-       # ===============================================================================================
-        # 6 - Mobility
+        # ===============================================================================================
+        # 5 - Mobility
         # ===============================================================================================
         '''
         It attempts to capture the relative difference between 
@@ -196,3 +197,10 @@ def heuristic3(game: Reversi, player):
             m = -(100.0 * opp_tiles) / (my_tiles + opp_tiles)
 
     return (10 * p) + (801.724 * c) + (382.026 * l) + (78.922 * m) + (74.396 * f) + (10 * d)
+
+def heuristic4(game: Reversi, player):
+    player_moves = len(game.custom_player_available_moves(player))
+    opponent_moves = len(game.custom_player_available_moves(game.get_oponent_field(player)))
+    return player_moves - opponent_moves
+def heuristic5(game: Reversi, player):
+    return random.randint(-100,100)
