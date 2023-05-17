@@ -2,7 +2,6 @@ import random
 
 from Lab02 import Reversi
 
-
 def heuristic1(board: Reversi, player):
     return board.custom_player_discs_len(player)
 
