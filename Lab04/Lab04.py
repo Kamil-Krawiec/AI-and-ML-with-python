@@ -1,12 +1,17 @@
-from sklearn.naive_bayes import GaussianNB
+import warnings
+
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, cross_validate
-from sklearn.preprocessing import KBinsDiscretizer, MinMaxScaler
 from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.exceptions import UndefinedMetricWarning
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.model_selection import train_test_split, cross_validate
+from sklearn.naive_bayes import GaussianNB
+from sklearn.preprocessing import KBinsDiscretizer, MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier
+
+from Analyse import *
 
 type_of_glass = {
     1: 'building_windows_float_processed',
@@ -18,28 +23,49 @@ type_of_glass = {
     7: 'headlamps'
 }
 
-results= pd.DataFrame(columns=['mean_result_acc','mean_result_prec','mean_result_recall','mean_result_f1','processing_method','model_name','cross'])
+results = pd.DataFrame(
+    columns=['mean_result_acc', 'mean_result_prec', 'mean_result_recall', 'mean_result_f1', 'processing_method',
+             'model_name', 'cross'])
 
+# Przetwarzanie parametry
 PCA_N_COMPONENTS = 6
 DISCRETIZATION_N_BINS = 5
-NORMALIZATION_MAX_RANGE = 10
+NORMALIZATION_MAX_RANGE = 100
+
+# Modele hiperparametry
+hyper_params = {
+'LOGISTIC_REGRESSION_C' : 1,
+'DECISION_TREE_MAX_DEPTH' : None,
+'DECISION_TREE_MIN_SAMPLES_SPLIT' : 2,
+'DECISION_TREE_CRITERION' : 'gini',
+'RANDOM_FOREST_N_ESTIMATORS' : 100,
+'RANDOM_FOREST_MAX_DEPTH' : 10,
+'RANDOM_FOREST_MIN_SAMPLES_SPLIT' : 2
+}
+
+
 
 def read_data():
-    df = pd.read_csv("glass.data",names=['ID','RI','Na','Mg','Al','Si','K','Ca','Ba','Fe','Type_int'],header=None)
+    df = pd.read_csv("glass.data", names=['ID', 'RI', 'Na', 'Mg', 'Al', 'Si', 'K', 'Ca', 'Ba', 'Fe', 'Type_int'],
+                     header=None)
     return df
+
 
 def nothing(X):
     return X
+
 
 def normalization(X):
     scaler = MinMaxScaler(feature_range=(0, NORMALIZATION_MAX_RANGE))
     X = scaler.fit_transform(X)
     return X
 
+
 def discretization(X):
     discretizer = KBinsDiscretizer(n_bins=DISCRETIZATION_N_BINS, encode='ordinal', strategy='uniform')
     X_discretized = discretizer.fit_transform(X)
     return X_discretized
+
 
 def pca(X):
     pca = PCA(n_components=PCA_N_COMPONENTS)
@@ -47,23 +73,28 @@ def pca(X):
     X_pca = pca.fit_transform(X)
     return X_pca
 
-def evaluate_model_cross(X, y, model,scaling_X):
+
+def evaluate_model_cross(X, y, model, scaling_X):
     X_scaled = scaling_X(X)
 
-    scores = cross_validate(model, X_scaled, y, cv=5,scoring = ['accuracy', 'precision_macro', 'recall_macro', 'f1_macro'])
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
+        scores = cross_validate(model, X_scaled, y, cv=5,
+                                scoring=['accuracy', 'precision_macro', 'recall_macro', 'f1_macro'])
 
-    new_row = [ scores['test_accuracy'].mean(),
-                scores['test_precision_macro'].mean(),
-                scores['test_recall_macro'].mean(),
-                scores['test_f1_macro'].mean(),
-                scaling_X.__name__,
-                model.__class__.__name__,
-                True]
+    new_row = [scores['test_accuracy'].mean(),
+               scores['test_precision_macro'].mean(),
+               scores['test_recall_macro'].mean(),
+               scores['test_f1_macro'].mean(),
+               scaling_X.__name__,
+               model.__class__.__name__,
+               True]
 
     results.loc[len(results)] = new_row
 
+
 def evaluate_model_split(X, y, model, scaling_X):
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3, random_state=0)
 
     X_train_scaled = scaling_X(X_train)
     X_val_scaled = scaling_X(X_val)
@@ -72,9 +103,9 @@ def evaluate_model_split(X, y, model, scaling_X):
     y_pred = model.predict(X_val_scaled)
 
     accuracy = accuracy_score(y_val, y_pred)
-    precision = precision_score(y_val, y_pred, average='macro')
-    recall = recall_score(y_val, y_pred, average='macro')
-    f1 = f1_score(y_val, y_pred, average='macro')
+    precision = precision_score(y_val, y_pred, average='macro', zero_division=1)
+    recall = recall_score(y_val, y_pred, average='macro', zero_division=1)
+    f1 = f1_score(y_val, y_pred, average='macro', zero_division=1)
 
     new_row = [accuracy,
                precision,
@@ -86,40 +117,61 @@ def evaluate_model_split(X, y, model, scaling_X):
 
     results.loc[len(results)] = new_row
 
+
 df = read_data()
 
-
-
-
-X = df.drop(['ID','Type_int'], axis=1)
+X = df.drop(['ID', 'Type_int'], axis=1)
 y = df['Type_int']
 
-logistic_reg = LogisticRegression(max_iter=100000)
-random_forest = RandomForestClassifier()
-decision_tree = DecisionTreeClassifier()
+logistic_reg = LogisticRegression(
+    max_iter=100000,
+    C=hyper_params['LOGISTIC_REGRESSION_C']
+)
+
+random_forest = RandomForestClassifier(
+    n_estimators=hyper_params['RANDOM_FOREST_N_ESTIMATORS'],
+    max_depth=hyper_params['RANDOM_FOREST_MAX_DEPTH'],
+    min_samples_split=hyper_params['RANDOM_FOREST_MIN_SAMPLES_SPLIT']
+)
+
+decision_tree = DecisionTreeClassifier(
+    max_depth=hyper_params['DECISION_TREE_MAX_DEPTH'],
+    min_samples_split=hyper_params['DECISION_TREE_MIN_SAMPLES_SPLIT'],
+    criterion= hyper_params['DECISION_TREE_CRITERION']
+)
+
 gauss = GaussianNB()
 
-model_list = [logistic_reg,random_forest,decision_tree,gauss]
-processing_methods_list = [normalization,discretization,pca,nothing]
+model_list = [logistic_reg, random_forest, decision_tree, gauss]
+processing_methods_list = [normalization, discretization, pca, nothing]
 
 for proc_method in processing_methods_list:
     for model in model_list:
         df = read_data()
         X = df.drop(['ID', 'Type_int'], axis=1)
         y = df['Type_int']
-        evaluate_model_cross(X,y,model,proc_method)
-        evaluate_model_split(X,y,model,proc_method)
+        evaluate_model_cross(X, y, model, proc_method)
+        evaluate_model_split(X, y, model, proc_method)
 
+print(f"{50 * '#'} Processing {50 * '#'}")
+print(f"{50 * '-'} Cross {50 * '-'}")
+print(results[results['cross'] == True].groupby('processing_method').mean(float).to_string())
+print(f"{50 * '-'} Split {50 * '-'}")
+print(results[results['cross'] == False].groupby('processing_method').mean(float).to_string())
 
-print(results.to_string())
-print('Cross')
-print(results[results['cross'] == True].groupby('processing_method').mean().to_string())
-print('Split')
-print(results[results['cross'] == False].groupby('processing_method').mean().to_string())
+print(f"{50 * '#'} Modeling {50 * '#'}")
+print(f"{50 * '-'} Cross {50 * '-'}")
+print(results[results['cross'] == True].groupby('model_name').mean(float).to_string())
+print(f"{50 * '-'} Split {50 * '-'}")
+print(results[results['cross'] == False].groupby('model_name').mean(float).to_string())
 
+print(f"{50 * '#'} ALL {50 * '#'}")
+print(f"{50 * '-'} Cross {50 * '-'}")
+print(results[results['cross'] == True].groupby(['model_name', 'processing_method']).mean(float).to_string())
+print(f"{50 * '-'} Split {50 * '-'}")
+print(results[results['cross'] == False].groupby(['model_name', 'processing_method']).mean(float).to_string())
 
+# ----------------------------------------- WYKRESY
 
-
-
-
-
+showCharts(results, True, 'model_name', hyper_params)
+showCharts(results, True, 'processing_method', hyper_params)
