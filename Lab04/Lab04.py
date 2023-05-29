@@ -34,15 +34,14 @@ NORMALIZATION_MAX_RANGE = 100
 
 # Modele hiperparametry
 hyper_params = {
-'LOGISTIC_REGRESSION_C' : 1,
-'DECISION_TREE_MAX_DEPTH' : None,
-'DECISION_TREE_MIN_SAMPLES_SPLIT' : 2,
-'DECISION_TREE_CRITERION' : 'gini',
-'RANDOM_FOREST_N_ESTIMATORS' : 100,
-'RANDOM_FOREST_MAX_DEPTH' : 10,
-'RANDOM_FOREST_MIN_SAMPLES_SPLIT' : 2
+    'LOGISTIC_REGRESSION_C': [0.1, 1.0, 10.0],
+    'DECISION_TREE_MAX_DEPTH': [3, 5, 7],
+    'DECISION_TREE_MIN_SAMPLES_SPLIT': [2, 5, 10],
+    'DECISION_TREE_CRITERION': ['gini', 'entropy','log_loss'],
+    'RANDOM_FOREST_N_ESTIMATORS': [50, 100, 200],
+    'RANDOM_FOREST_MAX_DEPTH': [5, 10, 15],
+    'RANDOM_FOREST_MIN_SAMPLES_SPLIT': [2, 4, 6]
 }
-
 
 
 def read_data():
@@ -69,7 +68,6 @@ def discretization(X):
 
 def pca(X):
     pca = PCA(n_components=PCA_N_COMPONENTS)
-
     X_pca = pca.fit_transform(X)
     return X_pca
 
@@ -117,61 +115,82 @@ def evaluate_model_split(X, y, model, scaling_X):
 
     results.loc[len(results)] = new_row
 
+for i in range(3):
+    for j in range(3):
+        for k in range(3):
+            df = read_data()
 
-df = read_data()
+            X = df.drop(['ID', 'Type_int'], axis=1)
+            y = df['Type_int']
 
-X = df.drop(['ID', 'Type_int'], axis=1)
-y = df['Type_int']
+            params = {
+                'LOGISTIC_REGRESSION_C': hyper_params['LOGISTIC_REGRESSION_C'][i],
 
-logistic_reg = LogisticRegression(
-    max_iter=100000,
-    C=hyper_params['LOGISTIC_REGRESSION_C']
-)
+                'RANDOM_FOREST_N_ESTIMATORS': hyper_params['RANDOM_FOREST_N_ESTIMATORS'][i],
+                'RANDOM_FOREST_MAX_DEPTH': hyper_params['RANDOM_FOREST_MAX_DEPTH'][j],
+                'RANDOM_FOREST_MIN_SAMPLES_SPLIT':hyper_params['RANDOM_FOREST_MIN_SAMPLES_SPLIT'][k],
 
-random_forest = RandomForestClassifier(
-    n_estimators=hyper_params['RANDOM_FOREST_N_ESTIMATORS'],
-    max_depth=hyper_params['RANDOM_FOREST_MAX_DEPTH'],
-    min_samples_split=hyper_params['RANDOM_FOREST_MIN_SAMPLES_SPLIT']
-)
+                'DECISION_TREE_MAX_DEPTH': hyper_params['DECISION_TREE_MAX_DEPTH'][i],
+                'DECISION_TREE_MIN_SAMPLES_SPLIT': hyper_params['DECISION_TREE_MIN_SAMPLES_SPLIT'][j],
+                'DECISION_TREE_CRITERION': hyper_params['DECISION_TREE_CRITERION'][k]
+            }
 
-decision_tree = DecisionTreeClassifier(
-    max_depth=hyper_params['DECISION_TREE_MAX_DEPTH'],
-    min_samples_split=hyper_params['DECISION_TREE_MIN_SAMPLES_SPLIT'],
-    criterion= hyper_params['DECISION_TREE_CRITERION']
-)
+            logistic_reg = LogisticRegression(
+                max_iter=100000,
+                C= params['LOGISTIC_REGRESSION_C']
+            )
 
-gauss = GaussianNB()
+            random_forest = RandomForestClassifier(
+                n_estimators=params['RANDOM_FOREST_N_ESTIMATORS'],
+                max_depth=params['RANDOM_FOREST_MAX_DEPTH'],
+                min_samples_split=params['RANDOM_FOREST_MIN_SAMPLES_SPLIT']
+            )
 
-model_list = [logistic_reg, random_forest, decision_tree, gauss]
-processing_methods_list = [normalization, discretization, pca, nothing]
+            decision_tree = DecisionTreeClassifier(
+                max_depth=params['DECISION_TREE_MAX_DEPTH'],
+                min_samples_split=params['DECISION_TREE_MIN_SAMPLES_SPLIT'],
+                criterion=params['DECISION_TREE_CRITERION']
+            )
 
-for proc_method in processing_methods_list:
-    for model in model_list:
-        df = read_data()
-        X = df.drop(['ID', 'Type_int'], axis=1)
-        y = df['Type_int']
-        evaluate_model_cross(X, y, model, proc_method)
-        evaluate_model_split(X, y, model, proc_method)
+            gauss = GaussianNB()
 
-print(f"{50 * '#'} Processing {50 * '#'}")
-print(f"{50 * '-'} Cross {50 * '-'}")
-print(results[results['cross'] == True].groupby('processing_method').mean(float).to_string())
-print(f"{50 * '-'} Split {50 * '-'}")
-print(results[results['cross'] == False].groupby('processing_method').mean(float).to_string())
+            model_list = [logistic_reg, random_forest, decision_tree, gauss]
+            processing_methods_list = [normalization, discretization, pca, nothing]
 
-print(f"{50 * '#'} Modeling {50 * '#'}")
-print(f"{50 * '-'} Cross {50 * '-'}")
-print(results[results['cross'] == True].groupby('model_name').mean(float).to_string())
-print(f"{50 * '-'} Split {50 * '-'}")
-print(results[results['cross'] == False].groupby('model_name').mean(float).to_string())
+            for proc_method in processing_methods_list:
+                for model in model_list:
+                    df = read_data()
+                    X = df.drop(['ID', 'Type_int'], axis=1)
+                    y = df['Type_int']
+                    evaluate_model_cross(X, y, model, proc_method)
+                    evaluate_model_split(X, y, model, proc_method)
 
-print(f"{50 * '#'} ALL {50 * '#'}")
-print(f"{50 * '-'} Cross {50 * '-'}")
-print(results[results['cross'] == True].groupby(['model_name', 'processing_method']).mean(float).to_string())
-print(f"{50 * '-'} Split {50 * '-'}")
-print(results[results['cross'] == False].groupby(['model_name', 'processing_method']).mean(float).to_string())
+            showCharts(results, True, 'model_name',params)
+            # showCharts(results, True, 'processing_method')
+            # showCharts(results, True, ['processing_method', 'model_name'])
+
+#
+# print(f"{50 * '#'} Processing {50 * '#'}")
+# print(f"{50 * '-'} Cross {50 * '-'}")
+# print(results[results['cross'] == True].groupby('processing_method').mean(float).to_string())
+# print(f"{50 * '-'} Split {50 * '-'}")
+# print(results[results['cross'] == False].groupby('processing_method').mean(float).to_string())
+#
+# print(f"{50 * '#'} Modeling {50 * '#'}")
+# print(f"{50 * '-'} Cross {50 * '-'}")
+# print(results[results['cross'] == True].groupby('model_name').mean(float).to_string())
+# print(f"{50 * '-'} Split {50 * '-'}")
+# print(results[results['cross'] == False].groupby('model_name').mean(float).to_string())
+#
+# print(f"{50 * '#'} ALL {50 * '#'}")
+# print(f"{50 * '-'} Cross {50 * '-'}")
+# print(results[results['cross'] == True].groupby(['model_name', 'processing_method']).mean(float).to_string())
+# print(f"{50 * '-'} Split {50 * '-'}")
+# print(results[results['cross'] == False].groupby(['model_name', 'processing_method']).mean(float).to_string())
 
 # ----------------------------------------- WYKRESY
 
-showCharts(results, True, 'model_name', hyper_params)
-showCharts(results, True, 'processing_method', hyper_params)
+
+
+
+

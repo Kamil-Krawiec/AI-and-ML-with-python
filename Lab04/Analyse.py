@@ -1,10 +1,11 @@
 import json
+import time
 
 import numpy as np
 from matplotlib import pyplot as plt
 
 
-def showCharts(results, if_cross, group_by,params):
+def showCharts(results, if_cross, group_by,hyper_params):
     split_results = results[results['cross'] == if_cross]
     param_x = "models" if group_by == "model_name" else "processing"
 
@@ -34,7 +35,9 @@ def showCharts(results, if_cross, group_by,params):
               fontsize=35)
     plt.xticks(np.arange(len(grouped_df)), grouped_df.index, fontsize=30)
     plt.legend(loc='upper left', fontsize=25)
-    plt.text((len(grouped_df))/2 -1 , -0.25, json.dumps(params, indent=4), fontsize=25, ha='left')
+    plt.text((len(grouped_df))/2 -1 , -0.25, json.dumps(hyper_params,indent=4),bbox = dict(boxstyle='round', facecolor='white', edgecolor='gray', alpha=0.7)
+, fontsize=25, ha='left',wrap=True)
 
     plt.tight_layout()
-    plt.show()
+    plt.savefig(f'LabSI/Lab04/Charts/{time.time()}_plot.png')
+    plt.close()
