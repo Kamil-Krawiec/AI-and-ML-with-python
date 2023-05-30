@@ -231,8 +231,9 @@ def processing_test():
                     newParams = dict()
                     newParams.update(process_params)
                     newParams.update(params)
-                    showCharts(results=results, hyper_params=newParams, group_by_model=False, if_cross=False, mean=True)
+                    # showCharts(results=results, hyper_params=newParams, group_by_model=False, if_cross=False, mean=True)
 
 
 # processing_test()
 model_testing()
+print(results)
