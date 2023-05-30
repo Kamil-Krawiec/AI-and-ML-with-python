@@ -16,5 +16,5 @@ for image_file in image_files:
     frames.append(image)
 
 # Save the frames as a GIF animation
-gif_path = 'Gifs/Modeling_animation_split_max.gif'
+gif_path = 'Gifs/Modeling_animation_cross_mean_without_ba_si.gif'
 frames[0].save(gif_path, format='GIF', append_images=frames[1:], save_all=True, duration=1000, loop=0)

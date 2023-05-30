@@ -11,7 +11,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import KBinsDiscretizer, MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier
 
-from Analyse import showCharts
+from Analysis import showCharts
 
 type_of_glass = {
     1: 'building_windows_float_processed',
@@ -123,13 +123,13 @@ def evaluate_model_split(X, y, model, scaling_X):
 
 
 def model_testing():
+    df = read_data()
+    X = df.drop(['ID', 'Type_int','Ba','Si'], axis=1)
+    y = df['Type_int']
+
     for i in range(3):
         for j in range(3):
             for k in range(3):
-                df = read_data()
-                X = df.drop(['ID', 'Type_int'], axis=1)
-                y = df['Type_int']
-
                 params = {
                     'LOGISTIC_REGRESSION_C': hyper_params['LOGISTIC_REGRESSION_C'][i],
 
@@ -173,7 +173,7 @@ def model_testing():
                 newParams.update(process_params)
                 newParams.update(params)
 
-                showCharts(results=results, hyper_params=newParams, group_by_model=True, if_cross=False, mean=False)
+                showCharts(results=results, hyper_params=newParams, group_by_model=True, if_cross=True, mean=True)
 
 
 def processing_test():
@@ -231,9 +231,8 @@ def processing_test():
                     newParams = dict()
                     newParams.update(process_params)
                     newParams.update(params)
-                    # showCharts(results=results, hyper_params=newParams, group_by_model=False, if_cross=False, mean=True)
+                    showCharts(results=results, hyper_params=newParams, group_by_model=False, if_cross=False, mean=True)
 
 
 # processing_test()
 model_testing()
-print(results)
