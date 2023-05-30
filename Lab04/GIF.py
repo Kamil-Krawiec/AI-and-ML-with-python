@@ -2,10 +2,10 @@ from PIL import Image
 import glob
 
 # Specify the directory containing the PNG images
-image_dir = 'LabSI/Lab04/Charts/'
+image_dir = './Charts/Models'
 
 # Get a list of PNG files in the directory
-image_files = glob.glob(f'{image_dir}/*.png')
+image_files = sorted(glob.glob(f'{image_dir}/*.png'))
 
 # Create a list to hold the image frames
 frames = []
@@ -16,5 +16,5 @@ for image_file in image_files:
     frames.append(image)
 
 # Save the frames as a GIF animation
-gif_path = '/Users/kamil/PycharmProjects/LabSI/Lab04/animation.gif'
+gif_path = 'Gifs/Modeling_animation_split_max.gif'
 frames[0].save(gif_path, format='GIF', append_images=frames[1:], save_all=True, duration=1000, loop=0)
